@@ -4,30 +4,56 @@
 
 using namespace std;
 
-void cpuid(int leaf)
+void print_header()
 {
-	cout << hex << setfill('0') << setw(8) << leaf << ": ";
-	int registers[4]{};
-	__cpuid(registers, leaf);
-	char ascii[17]{};
+	cout << "    LEAF REG ";
+	for (int i = 31; i >= 0; --i)
+		cout << dec << setfill(' ') << setw(2) << i;
+	cout << " HEX      ASCII" << endl;
+}
+
+void print_register(const char* name, int value)
+{
+	cout << name << ' ';
+	for (int i = 31; i >= 0; --i)
+	{
+		bool bit = (1 << i) & value;
+		cout << ' ' << bit ? 1 : 0;
+	}
+	cout << ' ' << hex << setfill('0') << setw(8) << value << ' ';
 	for (int i = 0; i < 4; ++i)
 	{
-		for (int j = 0; j < 4; ++j)
-		{
-			char c = ((char*)&registers[i])[j];
-			ascii[i * 4 + j] = c > ' ' ? c : ' ';
-		}
-		cout << hex << setfill('0') << setw(8) << registers[i] << ' ';
+		char c = reinterpret_cast<char*>(&value)[i];
+		cout << (c > ' ' ? c : ' ');
 	}
-	cout << ascii << endl;
+	cout << endl;
+}
+
+void cpuid(int leaf)
+{
+	print_header();
+	char name[4]{ "eax" };
+	int regs[4]{};
+	__cpuid(regs, leaf);
+	for (int i = 0; i < 4; ++i)
+	{
+		if (i == 0)
+			cout << hex << setfill(' ') << setw(8) << leaf << ' ';
+		else
+			cout << "         ";
+		print_register(name, regs[i]);
+		++name[1];
+	}
+	cout << endl;
 }
 
 void main()
 {
-	cout << "Leaf      EAX      EBX      ECX      EDX      ASCII" << endl;
 	for (int i = 0x00; i <= 0x17; ++i)
 		cpuid(i);
 	for (int i = 0x80000000; i <= 0x80000008; ++i)
 		cpuid(i);
+#ifdef _DEBUG
 	cin.get();
+#endif
 }
