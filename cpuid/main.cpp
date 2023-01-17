@@ -29,7 +29,7 @@ void print_register(const char* name, int value)
 	cout << endl;
 }
 
-void cpuid(int leaf)
+void print_cpuid(int leaf)
 {
 	print_header();
 	char name[4]{ "eax" };
@@ -47,12 +47,33 @@ void cpuid(int leaf)
 	cout << endl;
 }
 
+int cpuid(int leaf, int reg)
+{
+	if (reg < 0 || reg >= 4)
+		return 0;
+
+	int regs[4]{};
+	__cpuid(regs, leaf);
+	return regs[reg];
+}
+
 void main()
 {
-	for (int i = 0x00; i <= 0x17; ++i)
-		cpuid(i);
-	for (int i = 0x80000000; i <= 0x80000008; ++i)
-		cpuid(i);
+	int start = 0x00000000;
+	int end = cpuid(start, 0);
+	for (int i = start; i <= end; ++i)
+		print_cpuid(i);
+
+	start = 0x40000000;
+	end = cpuid(start, 0);
+	for (int i = start; i <= end; ++i)
+		print_cpuid(i);
+
+	start = 0x80000000;
+	end = cpuid(start, 0);
+	for (int i = start; i <= end; ++i)
+		print_cpuid(i);
+
 #ifdef _DEBUG
 	cin.get();
 #endif
